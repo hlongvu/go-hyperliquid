@@ -93,9 +93,9 @@ func FloatToWire(x float64, szDecimals *int) string {
 	}
 	x, _ = bigf.Float64()
 	rounded := fmt.Sprintf("%.*f", maxDecSz, x)
-	for strings.HasSuffix(rounded, "0") {
-		rounded = strings.TrimSuffix(rounded, "0")
-	}
+	// for strings.HasSuffix(rounded, "0") {
+	// rounded = strings.TrimSuffix(rounded, "0")
+	// }
 	rounded = strings.TrimSuffix(rounded, ".")
 	return rounded
 }
