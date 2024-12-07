@@ -16,7 +16,8 @@ type IExchangeAPI interface {
 	Order(request OrderRequest, grouping Grouping) (*PlaceOrderResponse, error)
 	MarketOrder(coin string, size float64, slippage *float64) (*PlaceOrderResponse, error)
 	LimitOrder(orderType string, coin string, size float64, px float64, isBuy bool, reduceOnly bool) (*PlaceOrderResponse, error)
-
+	TakeProfitOrder(coin string, size float64, triggerPx float64) (*PlaceOrderResponse, error)
+	StopLossOrder(coin string, size float64, triggerPx float64) (*PlaceOrderResponse, error)
 	// Order management
 	CancelOrderByOID(coin string, orderID int) (any, error)
 	BulkCancelOrders(cancels []CancelOidWire) (any, error)
@@ -121,6 +122,48 @@ func (api *ExchangeAPI) LimitOrder(orderType string, coin string, size float64, 
 		ReduceOnly: reduceOnly,
 	}
 	return api.Order(orderRequest, GroupingNa)
+}
+
+// Open a take profit order.
+// Size determines the amount of the coin to buy/sell.
+func (api *ExchangeAPI) TakeProfitOrder(coin string, size float64, triggerPx float64) (*PlaceOrderResponse, error) {
+	// check if the order type is valid
+	orderTypeZ := OrderType{
+		Trigger: &TriggerOrderType{
+			IsMarket:  true,
+			TpSl:      TriggerTp,
+			TriggerPx: fmt.Sprintf("%.6f", triggerPx),
+		},
+	}
+	orderRequest := OrderRequest{
+		Coin:       coin,
+		IsBuy:      false,
+		Sz:         math.Abs(size),
+		OrderType:  orderTypeZ,
+		ReduceOnly: true,
+	}
+	return api.Order(orderRequest, GroupingTpSl)
+}
+
+// Open a stop loss order.
+// Size determines the amount of the coin to buy/sell.
+func (api *ExchangeAPI) StopLossOrder(coin string, size float64, triggerPx float64) (*PlaceOrderResponse, error) {
+	// check if the order type is valid
+	orderTypeZ := OrderType{
+		Trigger: &TriggerOrderType{
+			IsMarket:  true,
+			TpSl:      TriggerSl,
+			TriggerPx: fmt.Sprintf("%.6f", triggerPx),
+		},
+	}
+	orderRequest := OrderRequest{
+		Coin:       coin,
+		IsBuy:      true,
+		Sz:         math.Abs(size),
+		OrderType:  orderTypeZ,
+		ReduceOnly: true,
+	}
+	return api.Order(orderRequest, GroupingTpSl)
 }
 
 // Close all positions for a given coin. They are closing with a market order.
