@@ -16,8 +16,8 @@ type IExchangeAPI interface {
 	Order(request OrderRequest, grouping Grouping) (*PlaceOrderResponse, error)
 	MarketOrder(coin string, size float64, slippage *float64) (*PlaceOrderResponse, error)
 	LimitOrder(orderType string, coin string, size float64, px float64, isBuy bool, reduceOnly bool) (*PlaceOrderResponse, error)
-	TakeProfitOrder(coin string, size float64, triggerPx float64) (*PlaceOrderResponse, error)
-	StopLossOrder(coin string, size float64, triggerPx float64) (*PlaceOrderResponse, error)
+	TakeProfitOrder(coin string, size float64, triggerPx float64, isBuy bool) (*PlaceOrderResponse, error)
+	StopLossOrder(coin string, size float64, triggerPx float64, isBuy bool) (*PlaceOrderResponse, error)
 	// Order management
 	CancelOrderByOID(coin string, orderID int) (any, error)
 	BulkCancelOrders(cancels []CancelOidWire) (any, error)
@@ -126,7 +126,7 @@ func (api *ExchangeAPI) LimitOrder(orderType string, coin string, size float64, 
 
 // Open a take profit order.
 // Size determines the amount of the coin to buy/sell.
-func (api *ExchangeAPI) TakeProfitOrder(coin string, size float64, triggerPx float64) (*PlaceOrderResponse, error) {
+func (api *ExchangeAPI) TakeProfitOrder(coin string, size float64, triggerPx float64, isBuy bool) (*PlaceOrderResponse, error) {
 	// check if the order type is valid
 	orderTypeZ := OrderType{
 		Trigger: &TriggerOrderType{
@@ -137,7 +137,7 @@ func (api *ExchangeAPI) TakeProfitOrder(coin string, size float64, triggerPx flo
 	}
 	orderRequest := OrderRequest{
 		Coin:       coin,
-		IsBuy:      false,
+		IsBuy:      isBuy,
 		Sz:         math.Abs(size),
 		OrderType:  orderTypeZ,
 		ReduceOnly: true,
@@ -147,7 +147,7 @@ func (api *ExchangeAPI) TakeProfitOrder(coin string, size float64, triggerPx flo
 
 // Open a stop loss order.
 // Size determines the amount of the coin to buy/sell.
-func (api *ExchangeAPI) StopLossOrder(coin string, size float64, triggerPx float64) (*PlaceOrderResponse, error) {
+func (api *ExchangeAPI) StopLossOrder(coin string, size float64, triggerPx float64, isBuy bool) (*PlaceOrderResponse, error) {
 	// check if the order type is valid
 	orderTypeZ := OrderType{
 		Trigger: &TriggerOrderType{
@@ -158,7 +158,7 @@ func (api *ExchangeAPI) StopLossOrder(coin string, size float64, triggerPx float
 	}
 	orderRequest := OrderRequest{
 		Coin:       coin,
-		IsBuy:      true,
+		IsBuy:      isBuy,
 		Sz:         math.Abs(size),
 		OrderType:  orderTypeZ,
 		ReduceOnly: true,
