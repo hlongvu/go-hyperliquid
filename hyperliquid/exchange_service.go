@@ -135,7 +135,7 @@ func (api *ExchangeAPI) TakeProfitOrder(coin string, size float64, triggerPx flo
 		Trigger: &TriggerOrderType{
 			IsMarket:  true,
 			TpSl:      TriggerTp,
-			TriggerPx: fmt.Sprintf("%.6f", triggerPx),
+			TriggerPx: FloatToWire(triggerPx, nil),
 		},
 	}
 	orderRequest := OrderRequest{
@@ -160,7 +160,7 @@ func (api *ExchangeAPI) StopLossOrder(coin string, size float64, triggerPx float
 		Trigger: &TriggerOrderType{
 			IsMarket:  true,
 			TpSl:      TriggerSl,
-			TriggerPx: fmt.Sprintf("%.6f", triggerPx),
+			TriggerPx: FloatToWire(triggerPx, nil),
 		},
 	}
 	orderRequest := OrderRequest{
