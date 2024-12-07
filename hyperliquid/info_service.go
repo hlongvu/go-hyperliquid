@@ -28,6 +28,10 @@ type IInfoAPI interface {
 	GetAccountNonFundingUpdates(startTime int64, endTime int64) (*[]NonFundingUpdate, error)
 	GetHistoricalFundingRates() (*[]HistoricalFundingRate, error)
 
+	// SPOT INFO API ENDPOINTS
+	GetUserStateSpot(address string) (*UserState, error)
+	GetAccountStateSpot() (*UserState, error)
+
 	// Additional helper functions
 	GetMartketPx(coin string) (float64, error)
 	BuildMetaMap() (map[string]AssetInfo, error)
@@ -163,6 +167,17 @@ func (api *InfoAPI) GetUserState(address string) (*UserState, error) {
 // Check AccountAddress() or SetAccountAddress() if there is a need to set the account address
 func (api *InfoAPI) GetAccountState() (*UserState, error) {
 	return api.GetUserState(api.AccountAddress())
+}
+
+func (api *InfoAPI) GetUserStateSpot(address string) (*UserStateSpot, error) {
+	request := UserStateRequest{
+		User:  address,
+		Typez: "spotClearinghouseState",
+	}
+	return MakeUniversalRequest[UserStateSpot](api, request)
+}
+func (api *InfoAPI) GetAccountStateSpot() (*UserStateSpot, error) {
+	return api.GetUserStateSpot(api.AccountAddress())
 }
 
 // Retrieve a user's funding history
