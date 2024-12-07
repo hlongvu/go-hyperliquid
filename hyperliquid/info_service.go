@@ -72,7 +72,7 @@ func (api *InfoAPI) GetAllMids() (*map[string]string, error) {
 func (api *InfoAPI) GetOpenOrders(address string) (*[]Order, error) {
 	request := InfoRequest{
 		User:  address,
-		Typez: "openOrders",
+		Typez: "frontendOpenOrders",
 	}
 	return MakeUniversalRequest[[]Order](api, request)
 }

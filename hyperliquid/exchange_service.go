@@ -128,6 +128,9 @@ func (api *ExchangeAPI) LimitOrder(orderType string, coin string, size float64, 
 // Size determines the amount of the coin to buy/sell.
 func (api *ExchangeAPI) TakeProfitOrder(coin string, size float64, triggerPx float64, isBuy bool) (*PlaceOrderResponse, error) {
 	// check if the order type is valid
+	slpg := GetSlippage(nil)
+	finalPx := api.SlippagePrice(coin, isBuy, slpg)
+
 	orderTypeZ := OrderType{
 		Trigger: &TriggerOrderType{
 			IsMarket:  true,
@@ -140,6 +143,7 @@ func (api *ExchangeAPI) TakeProfitOrder(coin string, size float64, triggerPx flo
 		IsBuy:      isBuy,
 		Sz:         math.Abs(size),
 		OrderType:  orderTypeZ,
+		LimitPx:    finalPx,
 		ReduceOnly: true,
 	}
 	return api.Order(orderRequest, GroupingTpSl)
@@ -149,6 +153,9 @@ func (api *ExchangeAPI) TakeProfitOrder(coin string, size float64, triggerPx flo
 // Size determines the amount of the coin to buy/sell.
 func (api *ExchangeAPI) StopLossOrder(coin string, size float64, triggerPx float64, isBuy bool) (*PlaceOrderResponse, error) {
 	// check if the order type is valid
+	slpg := GetSlippage(nil)
+	finalPx := api.SlippagePrice(coin, isBuy, slpg)
+
 	orderTypeZ := OrderType{
 		Trigger: &TriggerOrderType{
 			IsMarket:  true,
@@ -161,6 +168,7 @@ func (api *ExchangeAPI) StopLossOrder(coin string, size float64, triggerPx float
 		IsBuy:      isBuy,
 		Sz:         math.Abs(size),
 		OrderType:  orderTypeZ,
+		LimitPx:    finalPx,
 		ReduceOnly: true,
 	}
 	return api.Order(orderRequest, GroupingTpSl)
