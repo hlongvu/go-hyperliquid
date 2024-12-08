@@ -130,12 +130,13 @@ func (api *ExchangeAPI) TakeProfitOrder(coin string, size float64, triggerPx flo
 	// check if the order type is valid
 	slpg := GetSlippage(nil)
 	finalPx := api.SlippagePrice(coin, isBuy, slpg)
+	info := api.meta[coin]
 
 	orderTypeZ := OrderType{
 		Trigger: &TriggerOrderType{
 			IsMarket:  true,
 			TpSl:      TriggerTp,
-			TriggerPx: FloatToWire(triggerPx, nil),
+			TriggerPx: FloatToWire(triggerPx, &info.SzDecimals),
 		},
 	}
 	orderRequest := OrderRequest{
@@ -155,12 +156,12 @@ func (api *ExchangeAPI) StopLossOrder(coin string, size float64, triggerPx float
 	// check if the order type is valid
 	slpg := GetSlippage(nil)
 	finalPx := api.SlippagePrice(coin, isBuy, slpg)
-
+	info := api.meta[coin]
 	orderTypeZ := OrderType{
 		Trigger: &TriggerOrderType{
 			IsMarket:  true,
 			TpSl:      TriggerSl,
-			TriggerPx: FloatToWire(triggerPx, nil),
+			TriggerPx: FloatToWire(triggerPx, &info.SzDecimals),
 		},
 	}
 	orderRequest := OrderRequest{
