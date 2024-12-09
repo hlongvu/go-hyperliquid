@@ -126,7 +126,7 @@ func (api *ExchangeAPI) LimitOrder(orderType string, coin string, size float64, 
 
 // Open a take profit order.
 // Size determines the amount of the coin to buy/sell.
-func (api *ExchangeAPI) TakeProfitOrder(coin string, size float64, triggerPx float64, isBuy bool) (*PlaceOrderResponse, error) {
+func (api *ExchangeAPI) TakeProfitOrder(coin string, size float64, triggerPx float64, isBuy bool) (*TpSlOrderResponse, error) {
 	// check if the order type is valid
 	slpg := GetSlippage(nil)
 	finalPx := api.SlippagePrice(coin, isBuy, slpg)
@@ -147,12 +147,12 @@ func (api *ExchangeAPI) TakeProfitOrder(coin string, size float64, triggerPx flo
 		LimitPx:    finalPx,
 		ReduceOnly: true,
 	}
-	return api.Order(orderRequest, GroupingTpSl)
+	return api.TpSlOrder(orderRequest, GroupingTpSl)
 }
 
 // Open a stop loss order.
 // Size determines the amount of the coin to buy/sell.
-func (api *ExchangeAPI) StopLossOrder(coin string, size float64, triggerPx float64, isBuy bool) (*PlaceOrderResponse, error) {
+func (api *ExchangeAPI) StopLossOrder(coin string, size float64, triggerPx float64, isBuy bool) (*TpSlOrderResponse, error) {
 	// check if the order type is valid
 	slpg := GetSlippage(nil)
 	finalPx := api.SlippagePrice(coin, isBuy, slpg)
@@ -172,7 +172,7 @@ func (api *ExchangeAPI) StopLossOrder(coin string, size float64, triggerPx float
 		LimitPx:    finalPx,
 		ReduceOnly: true,
 	}
-	return api.Order(orderRequest, GroupingTpSl)
+	return api.TpSlOrder(orderRequest, GroupingTpSl)
 }
 
 // Close all positions for a given coin. They are closing with a market order.
@@ -220,9 +220,36 @@ func (api *ExchangeAPI) Order(request OrderRequest, grouping Grouping) (*PlaceOr
 	return api.BulkOrders([]OrderRequest{request}, grouping)
 }
 
+// Place limit order
+func (api *ExchangeAPI) TpSlOrder(request OrderRequest, grouping Grouping) (*TpSlOrderResponse, error) {
+	return makeBulkOrdersGeneric[TpSlOrderResponse](api, []OrderRequest{request}, grouping)
+}
+
 // Place orders in bulk
 // https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#place-an-order
 func (api *ExchangeAPI) BulkOrders(requests []OrderRequest, grouping Grouping) (*PlaceOrderResponse, error) {
+	// var wires []OrderWire
+	// for _, req := range requests {
+	// 	wires = append(wires, OrderRequestToWire(req, api.meta))
+	// }
+	// timestamp := GetNonce()
+	// action := OrderWiresToOrderAction(wires, grouping)
+	// v, r, s, err := api.SignL1Action(action, timestamp)
+	// if err != nil {
+	// 	api.debug("Error signing L1 action: %s", err)
+	// 	return nil, err
+	// }
+	// request := ExchangeRequest{
+	// 	Action:       action,
+	// 	Nonce:        timestamp,
+	// 	Signature:    ToTypedSig(r, s, v),
+	// 	VaultAddress: nil,
+	// }
+	// return MakeUniversalRequest[PlaceOrderResponse](api, request)
+	return makeBulkOrdersGeneric[PlaceOrderResponse](api, requests, grouping)
+}
+
+func makeBulkOrdersGeneric[T any](api *ExchangeAPI, requests []OrderRequest, grouping Grouping) (*T, error) {
 	var wires []OrderWire
 	for _, req := range requests {
 		wires = append(wires, OrderRequestToWire(req, api.meta))
@@ -240,7 +267,7 @@ func (api *ExchangeAPI) BulkOrders(requests []OrderRequest, grouping Grouping) (
 		Signature:    ToTypedSig(r, s, v),
 		VaultAddress: nil,
 	}
-	return MakeUniversalRequest[PlaceOrderResponse](api, request)
+	return MakeUniversalRequest[T](api, request)
 }
 
 // Cancel order(s)

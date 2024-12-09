@@ -99,6 +99,20 @@ type DataResponse struct {
 	Statuses []StatusResponse `json:"statuses"`
 }
 
+type TpSlOrderResponse struct {
+	Status   string                 `json:"status"`
+	Response TpSlOrderInnerResponse `json:"response"`
+}
+
+type TpSlOrderInnerResponse struct {
+	Type string           `json:"type"`
+	Data TpSlDataResponse `json:"data"`
+}
+
+type TpSlDataResponse struct {
+	Statuses []string `json:"statuses"`
+}
+
 type StatusResponse struct {
 	Resting RestingStatus `json:"resting,omitempty"`
 	Filled  FilledStatus  `json:"filled,omitempty"`
