@@ -224,3 +224,39 @@ type WithdrawResponse struct {
 	Status string `json:"status"`
 	Nonce  int64
 }
+
+type ClassTransferData struct {
+	Usdc   float64 `msgpack:"usdc" json:"usdc"`
+	ToPerp bool    `msgpack:"toPerp" json:"toPerp"`
+}
+
+// Transfer USDC from spot to perp
+type TransferUSDCSpotPerpAction struct {
+	Type          string            `msgpack:"type" json:"type"`
+	ClassTransfer ClassTransferData `msgpack:"classTransfer" json:"classTransfer"`
+}
+
+type TransferUSDCSpotPerpInnerResponse struct {
+	Type string `json:"type"`
+}
+
+type TransferUSDCSpotPerpResponse struct {
+	Status   string                            `json:"status"`
+	Response TransferUSDCSpotPerpInnerResponse `json:"response"`
+}
+
+// Transfer action
+/*
+	  "type": "usdClassTransfer",
+            "amount": str_amount,
+            "toPerp": to_perp,
+            "nonce": timestamp,
+*/
+type TransferAction struct {
+	Type             string `msgpack:"type" json:"type"`
+	Amount           string `msgpack:"amount" json:"amount"`
+	ToPerp           bool   `msgpack:"toPerp" json:"toPerp"`
+	Nonce            uint64 `msgpack:"nonce" json:"nonce"`
+	HyperliquidChain string `msgpack:"hyperliquidChain" json:"hyperliquidChain"`
+	SignatureChainID string `msgpack:"signatureChainId" json:"signatureChainId"`
+}

@@ -28,6 +28,8 @@ type IExchangeAPI interface {
 	// Account management
 	Withdraw(destination string, amount float64) (*WithdrawResponse, error)
 	UpdateLeverage(coin string, isCross bool, leverage int) (any, error)
+	TransferUSDCSpotVsPerp(amount float64, toPerp bool) (*TransferUSDCSpotPerpResponse, error)
+	Transfer(amount float64, toPerp bool) (*TransferUSDCSpotPerpResponse, error)
 }
 
 // Implement the IExchangeAPI interface.
@@ -228,24 +230,6 @@ func (api *ExchangeAPI) TpSlOrder(request OrderRequest, grouping Grouping) (*TpS
 // Place orders in bulk
 // https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#place-an-order
 func (api *ExchangeAPI) BulkOrders(requests []OrderRequest, grouping Grouping) (*PlaceOrderResponse, error) {
-	// var wires []OrderWire
-	// for _, req := range requests {
-	// 	wires = append(wires, OrderRequestToWire(req, api.meta))
-	// }
-	// timestamp := GetNonce()
-	// action := OrderWiresToOrderAction(wires, grouping)
-	// v, r, s, err := api.SignL1Action(action, timestamp)
-	// if err != nil {
-	// 	api.debug("Error signing L1 action: %s", err)
-	// 	return nil, err
-	// }
-	// request := ExchangeRequest{
-	// 	Action:       action,
-	// 	Nonce:        timestamp,
-	// 	Signature:    ToTypedSig(r, s, v),
-	// 	VaultAddress: nil,
-	// }
-	// return MakeUniversalRequest[PlaceOrderResponse](api, request)
 	return makeBulkOrdersGeneric[PlaceOrderResponse](api, requests, grouping)
 }
 
@@ -409,4 +393,54 @@ func (api *ExchangeAPI) BuildBulkOrdersEIP712(requests []OrderRequest, grouping 
 // Build order EIP712 message
 func (api *ExchangeAPI) BuildOrderEIP712(request OrderRequest, grouping Grouping) (apitypes.TypedData, error) {
 	return api.BuildBulkOrdersEIP712([]OrderRequest{request}, grouping)
+}
+
+// Spot vs Perp transfer - Not working now
+func (api *ExchangeAPI) TransferUSDCSpotVsPerp(amount float64, toPerp bool) (*TransferUSDCSpotPerpResponse, error) {
+	nonce := GetNonce()
+	action := TransferUSDCSpotPerpAction{
+		Type: "spotUser",
+		ClassTransfer: ClassTransferData{
+			Usdc:   amount,
+			ToPerp: toPerp,
+		},
+	}
+	v, r, s, err := api.SignL1Action(action, nonce)
+	if err != nil {
+		api.debug("Error signing transfer action: %s", err)
+		return nil, err
+	}
+	request := &ExchangeRequest{
+		Action:       action,
+		Nonce:        nonce,
+		Signature:    ToTypedSig(r, s, v),
+		VaultAddress: nil,
+	}
+	return MakeUniversalRequest[TransferUSDCSpotPerpResponse](api, request)
+}
+
+// Transfer USDC from spot to perp
+func (api *ExchangeAPI) Transfer(amount float64, toPerp bool) (*TransferUSDCSpotPerpResponse, error) {
+	nonce := GetNonce()
+	action := TransferAction{
+		Type:   "usdClassTransfer",
+		Amount: fmt.Sprintf("%v", amount),
+		ToPerp: toPerp,
+		Nonce:  nonce,
+	}
+	signatureChainID, chainType := api.getChainParams()
+	action.HyperliquidChain = chainType
+	action.SignatureChainID = signatureChainID
+	v, r, s, err := api.SignTransferAction(action)
+	if err != nil {
+		api.debug("Error signing transfer action: %s", err)
+		return nil, err
+	}
+	request := &ExchangeRequest{
+		Action:       action,
+		Nonce:        nonce,
+		Signature:    ToTypedSig(r, s, v),
+		VaultAddress: nil,
+	}
+	return MakeUniversalRequest[TransferUSDCSpotPerpResponse](api, request)
 }
