@@ -28,8 +28,9 @@ type IExchangeAPI interface {
 	// Account management
 	Withdraw(destination string, amount float64) (*WithdrawResponse, error)
 	UpdateLeverage(coin string, isCross bool, leverage int) (any, error)
-	TransferUSDCSpotVsPerp(amount float64, toPerp bool) (*TransferUSDCSpotPerpResponse, error)
-	Transfer(amount float64, toPerp bool) (*TransferUSDCSpotPerpResponse, error)
+	TransferUSDCSpotVsPerp(amount float64, toPerp bool) (*TransferResponse, error)
+	Transfer(amount float64, toPerp bool) (*TransferResponse, error)
+	L1Transfer(toAddress string, amount float64) (*TransferResponse, error)
 }
 
 // Implement the IExchangeAPI interface.
@@ -396,7 +397,7 @@ func (api *ExchangeAPI) BuildOrderEIP712(request OrderRequest, grouping Grouping
 }
 
 // Spot vs Perp transfer - Not working now
-func (api *ExchangeAPI) TransferUSDCSpotVsPerp(amount float64, toPerp bool) (*TransferUSDCSpotPerpResponse, error) {
+func (api *ExchangeAPI) TransferUSDCSpotVsPerp(amount float64, toPerp bool) (*TransferResponse, error) {
 	nonce := GetNonce()
 	action := TransferUSDCSpotPerpAction{
 		Type: "spotUser",
@@ -416,11 +417,11 @@ func (api *ExchangeAPI) TransferUSDCSpotVsPerp(amount float64, toPerp bool) (*Tr
 		Signature:    ToTypedSig(r, s, v),
 		VaultAddress: nil,
 	}
-	return MakeUniversalRequest[TransferUSDCSpotPerpResponse](api, request)
+	return MakeUniversalRequest[TransferResponse](api, request)
 }
 
 // Transfer USDC from spot to perp
-func (api *ExchangeAPI) Transfer(amount float64, toPerp bool) (*TransferUSDCSpotPerpResponse, error) {
+func (api *ExchangeAPI) Transfer(amount float64, toPerp bool) (*TransferResponse, error) {
 	nonce := GetNonce()
 	action := TransferAction{
 		Type:   "usdClassTransfer",
@@ -442,5 +443,31 @@ func (api *ExchangeAPI) Transfer(amount float64, toPerp bool) (*TransferUSDCSpot
 		Signature:    ToTypedSig(r, s, v),
 		VaultAddress: nil,
 	}
-	return MakeUniversalRequest[TransferUSDCSpotPerpResponse](api, request)
+	return MakeUniversalRequest[TransferResponse](api, request)
+}
+
+func (api *ExchangeAPI) L1Transfer(toAddress string, amount float64) (*TransferResponse, error) {
+	nonce := GetNonce()
+	action := L1TransferAction{
+		Type:        "usdSend",
+		Amount:      fmt.Sprintf("%v", amount),
+		Destination: toAddress,
+		Time:        nonce,
+	}
+	signatureChainID, chainType := api.getChainParams()
+	action.HyperliquidChain = chainType
+	action.SignatureChainID = signatureChainID
+
+	v, r, s, err := api.SignL1TransferAction(action)
+	if err != nil {
+		api.debug("Error signing transfer action: %s", err)
+		return nil, err
+	}
+	request := &ExchangeRequest{
+		Action:       action,
+		Nonce:        nonce,
+		Signature:    ToTypedSig(r, s, v),
+		VaultAddress: nil,
+	}
+	return MakeUniversalRequest[TransferResponse](api, request)
 }

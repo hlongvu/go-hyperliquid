@@ -116,3 +116,31 @@ func (api *ExchangeAPI) SignTransferAction(action TransferAction) (byte, [32]byt
 	}
 	return api.SignUserSignableAction(action, types, "HyperliquidTransaction:UsdClassTransfer")
 }
+
+func (api *ExchangeAPI) SignL1TransferAction(action L1TransferAction) (byte, [32]byte, [32]byte, error) {
+	/*
+				{"name": "hyperliquidChain", "type": "string"},
+		    {"name": "destination", "type": "string"},
+		    {"name": "amount", "type": "string"},
+		    {"name": "time", "type": "uint64"},
+	*/
+	types := []apitypes.Type{
+		{
+			Name: "hyperliquidChain",
+			Type: "string",
+		},
+		{
+			Name: "destination",
+			Type: "string",
+		},
+		{
+			Name: "amount",
+			Type: "string",
+		},
+		{
+			Name: "time",
+			Type: "uint64",
+		},
+	}
+	return api.SignUserSignableAction(action, types, "HyperliquidTransaction:UsdSend")
+}

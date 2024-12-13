@@ -236,13 +236,13 @@ type TransferUSDCSpotPerpAction struct {
 	ClassTransfer ClassTransferData `msgpack:"classTransfer" json:"classTransfer"`
 }
 
-type TransferUSDCSpotPerpInnerResponse struct {
+type TransferInnerResponse struct {
 	Type string `json:"type"`
 }
 
-type TransferUSDCSpotPerpResponse struct {
-	Status   string                            `json:"status"`
-	Response TransferUSDCSpotPerpInnerResponse `json:"response"`
+type TransferResponse struct {
+	Status   string                `json:"status"`
+	Response TransferInnerResponse `json:"response"`
 }
 
 // Transfer action
@@ -257,6 +257,25 @@ type TransferAction struct {
 	Amount           string `msgpack:"amount" json:"amount"`
 	ToPerp           bool   `msgpack:"toPerp" json:"toPerp"`
 	Nonce            uint64 `msgpack:"nonce" json:"nonce"`
+	HyperliquidChain string `msgpack:"hyperliquidChain" json:"hyperliquidChain"`
+	SignatureChainID string `msgpack:"signatureChainId" json:"signatureChainId"`
+}
+
+/*
+	{
+	        "type": "usdSend",
+	        "signatureChainId": "0x66eee",
+	        "hyperliquidChain": "Testnet",
+	        "destination": "0x0000000000000000000000000000000000000000",
+	        "amount": "100.0",
+	        "time": timestamp,
+	    }
+*/
+type L1TransferAction struct {
+	Type             string `msgpack:"type" json:"type"`
+	Destination      string `msgpack:"destination" json:"destination"`
+	Amount           string `msgpack:"amount" json:"amount"`
+	Time             uint64 `msgpack:"time" json:"time"`
 	HyperliquidChain string `msgpack:"hyperliquidChain" json:"hyperliquidChain"`
 	SignatureChainID string `msgpack:"signatureChainId" json:"signatureChainId"`
 }
